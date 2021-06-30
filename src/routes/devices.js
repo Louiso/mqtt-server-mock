@@ -1,17 +1,17 @@
+require("react")
 const matchPath = require('node-match-path').match
 const deviceController = require('../controllers/devices')
-
+const { generatePath } = require("react-router")
 const { SBC_ID } = process.env
 
-const paths = {
+const endpoints = {
   POST_SWITCH_DEVICE_SWITCH: `${SBC_ID}/POST/devices/:deviceIp/switch`
 }
 
-exports.paths = paths
-
-exports.module = async (topic, message, client) => {
-  if(matchPath(paths.POST_SWITCH_DEVICE_SWITCH, topic).matches) {
-    const match = matchPath(paths.POST_SWITCH_DEVICE_SWITCH, topic)
+// _: packet
+exports.module = async (topic, message, _, client) => {
+  if(matchPath(endpoints.POST_SWITCH_DEVICE_SWITCH, topic).matches) {
+    const match = matchPath(endpoints.POST_SWITCH_DEVICE_SWITCH, topic)
 
     const { deviceIp } = match.params
     const { check } = JSON.parse(message.toString())
@@ -21,6 +21,14 @@ exports.module = async (topic, message, client) => {
       check
     })
 
-    client.publish(`${paths.POST_SWITCH_DEVICE_SWITCH}/response`)
+    console.log("_",_)
+
+    client.publish(generatePath(`${endpoints.POST_SWITCH_DEVICE_SWITCH}/response`, { deviceIp }), JSON.stringify({
+      success: true,
+      data: {
+        deviceIp,
+        check: true
+      }
+    }))
   }
 }

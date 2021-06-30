@@ -1,3 +1,3 @@
-exports.module = (topic, message, client) => {
-  require('./devices').module(topic, message, client)
+exports.module = (topic, message, packet, client) => {
+  require('./devices').module(topic, message, packet, client)
 }
