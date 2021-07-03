@@ -17,11 +17,11 @@ exports.module = async (topic, message, _, client) => {
     const { check } = JSON.parse(message.toString())
 
     await deviceController.module.checkEnableDevice({
-      ip: deviceIp, 
+      ip: deviceIp,
       check
     })
 
-    console.log("_",_)
+    console.log("_", _)
 
     client.publish(generatePath(`${endpoints.POST_SWITCH_DEVICE_SWITCH}/response`, { deviceIp }), JSON.stringify({
       success: true,
