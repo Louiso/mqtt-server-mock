@@ -1,34 +1,138 @@
-require("react")
-const matchPath = require('node-match-path').match
 const deviceController = require('../controllers/devices')
-const { generatePath } = require("react-router")
 const { SBC_ID } = process.env
 
-const endpoints = {
-  POST_SWITCH_DEVICE_SWITCH: `${SBC_ID}/POST/devices/:deviceIp/switch`
+const actions = {
+  SWITCH_CAMERA: 'SWITCH_CAMERA',
+  SET_CAMERA: 'SET_CAMERA',
+  CHECK_STATUS_CAMERA: 'CHECK_STATUS_CAMERA',
+  SET_THRESHOLD: 'SET_THRESHOLD',
+  SWITCH_DETECTION: 'SWITCH_DETECTION'
 }
 
 // _: packet
-exports.module = async (topic, message, _, client) => {
-  if(matchPath(endpoints.POST_SWITCH_DEVICE_SWITCH, topic).matches) {
-    const match = matchPath(endpoints.POST_SWITCH_DEVICE_SWITCH, topic)
+exports.module = async (topic, message, packet, client) => {
+  const body = JSON.parse(message.toString())
+  const { type, payload } = body
+  if(topic === `/${SBC_ID}/devices/cameras`) {
+    console.log("type",type)
+    try {
+      switch(type) {
+        case actions.SWITCH_CAMERA: {
+          const { powerOn, deviceId } = payload
+  
+          await deviceController.module.switchCamera({
+            deviceId,
+            powerOn
+          })
+  
+          client.publish(packet.properties.responseTopic, JSON.stringify({
+            success: true,
+            data: null,
+            message: ''
+          }), {
+            properties: {
+              correlationData: packet.properties.correlationData
+            }
+          })
+          break
+        }
+  
+        case actions.SET_CAMERA: {
+          const { ip, deviceId } = payload
+  
+          await deviceController.module.setCamera({
+            deviceId,
+            ip
+          })
+  
+          client.publish(packet.properties.responseTopic, JSON.stringify({
+            success: true,
+            data: null,
+            message: ''
+          }), {
+            properties: {
+              correlationData: packet.properties.correlationData
+            }
+          })
+          break
+        }
+  
+        case actions.CHECK_STATUS_CAMERA: {
+          const { deviceId } = payload
+          const powerOn = await deviceController.module.checkStatusCamera({ deviceId })
+  
+          client.publish(packet.properties.responseTopic, JSON.stringify({
+            success: true,
+            data: {
+              powerOn
+            },
+            message: ''
+          }), {
+            properties: {
+              correlationData: packet.properties.correlationData
+            }
+          })
+          break
+        }
 
-    const { deviceIp } = match.params
-    const { check } = JSON.parse(message.toString())
+        case actions.SET_THRESHOLD: {
+          // detection es detectionCode
+          const { deviceId, detection, newThreshold } = payload
+          await deviceController.module.setThreshold({ deviceId, detection, newThreshold })
+  
+          client.publish(packet.properties.responseTopic, JSON.stringify({
+            success: true,
+            data: null,
+            message: ''
+          }), {
+            properties: {
+              correlationData: packet.properties.correlationData
+            }
+          })
+          break
+        }
 
-    await deviceController.module.checkEnableDevice({
-      ip: deviceIp,
-      check
-    })
-
-    console.log("_", _)
-
-    client.publish(generatePath(`${endpoints.POST_SWITCH_DEVICE_SWITCH}/response`, { deviceIp }), JSON.stringify({
-      success: true,
-      data: {
-        deviceIp,
-        check: true
+        case actions.SWITCH_DETECTION: {
+          const { deviceId, detection, powerOn } = payload
+          await deviceController.module.switchDetection({ deviceId, detection, powerOn })
+  
+          client.publish(packet.properties.responseTopic, JSON.stringify({
+            success: true,
+            data: null,
+            message: ''
+          }), {
+            properties: {
+              correlationData: packet.properties.correlationData
+            }
+          })
+          break
+        }
+  
+        default: {
+          if(packet.properties.responseTopic)
+            client.publish(packet.properties.responseTopic, JSON.stringify({
+              success: false,
+              data: null,
+              message: '404'
+            }), {
+              properties: {
+                correlationData: packet.properties.correlationData
+              }
+            })
+          break
+        }
       }
-    }))
+    } catch (error) {
+      client.publish(packet.properties.responseTopic, JSON.stringify({
+        success: false,
+        data: null,
+        message: error.message
+      }), {
+        properties: {
+          correlationData: packet.properties.correlationData
+        }
+      })
+    }
+    
   }
 }

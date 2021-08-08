@@ -3,17 +3,61 @@
     ip: string;
   }
 */
-const checkEnableDevice = async ({ ip, check }) => {
+const switchCamera = async ({ deviceId, powerOn }) => {
+  try {
+    console.log("deviceId", deviceId)
+    console.log("powerOn",powerOn)
+
+    return powerOn
+  } catch (error) {
+    throw error
+  }
+}
+
+
+const setCamera = async ({ deviceId, ip }) => {
   try {
     console.log("ip", ip)
-    console.log("check",check)
+    console.log("deviceId",deviceId)
+    console.log('prendiendo cámara')
 
-    return check
+    return true
+  } catch (error) {
+    throw error
+  }
+}
+
+const checkStatusCamera = async ({ deviceId }) => {
+  try {
+    console.log("deviceId",deviceId)
+    return Boolean(Math.round(Math.random()))
+  } catch (error) {
+    throw error
+  }
+}
+
+const setThreshold = async ({ deviceId }) => {
+  try {
+    console.log("deviceId",deviceId)
+    return Boolean(Math.round(Math.random()))
+  } catch (error) {
+    throw error
+  }
+}
+
+const switchDetection = async ({ deviceId }) => {
+  try {
+    console.log("deviceId",deviceId)
+    return Boolean(Math.round(Math.random()))
   } catch (error) {
     throw error
   }
 }
 
 exports.module = {
-  checkEnableDevice
+  switchCamera,
+  setCamera,
+  checkStatusCamera,
+  setThreshold,
+  switchDetection
 }
